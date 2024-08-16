@@ -130,3 +130,25 @@ exports.delComment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.addReply = async (req, res) => {
+    try {
+        const userId = req.id;
+        const { content } = req.body;
+        const {commentId} = req.params;
+        const comment = await Comment.findById(commentId)
+        if (!comment) return res.status(400).json({ msg: "comment not found" });
+        const newComment = new Comment({
+          user: userId,
+          post: comment.post,
+          content: content,
+        });
+        const savedComment = await newComment.save();
+        comment.replies.push(savedComment)
+        await comment.save()
+        res.status(200).json({ msg: "reply added" });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+}
+
