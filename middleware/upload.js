@@ -8,7 +8,6 @@ const storage = new CloudinaryStorage({
   params: {
       folder: 'social_media_uploads',
       format: async (req, file) => {
-          // Extract the file extension and return it as the format
           const ext = file.mimetype.split('/')[1];
           return ['jpeg', 'png', "webp", 'bmp', 'tiff'].includes(ext) ? ext : 'jpeg';
       },
@@ -16,7 +15,6 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// File filter to allow only common image formats
 const fileFilter = (req, file, cb) => {
 try {
   const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff/;
@@ -34,12 +32,11 @@ try {
 }
 };
 
-// Init upload
 exports.upload = multer({
   storage,
   limits: { fileSize: 1000000 }, // 1MB limit
   fileFilter: fileFilter
-}).single('image');
+}).single('image'); // Field name should match the form field name
 
 
 

@@ -1,10 +1,9 @@
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig'); // Adjust path accordingly
+const cloudinary = require('../config/cloudinaryConfig'); 
 const { v4: uuidv4 } = require("uuid")
 
 
-// Configure Cloudinary Storage for media uploads
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: (req, file) => {
@@ -15,7 +14,7 @@ const storage = new CloudinaryStorage({
     if (file.mimetype.startsWith('image/')) {
       format = file.mimetype.split('/')[1];
     } else if (file.mimetype.startsWith('video/')) {
-      format = 'mp4'; // Use a common format for videos
+      format = 'mp4';
     } else if (file.mimetype.startsWith('image/gif')) {
       format = 'gif';
     }
@@ -28,9 +27,8 @@ const storage = new CloudinaryStorage({
   }
 });
 
-// File filter to handle different media types
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff|gif|mp4/; // Add more types if needed
+  const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff|gif|mp4/; 
   const mimetype = allowedTypes.test(file.mimetype);
   
   if (mimetype) {
@@ -40,7 +38,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Middleware for handling post media uploads
 exports.post = multer({
   storage,
   limits: { fileSize: 5000000 }, // 5MB limit (adjust as needed)
