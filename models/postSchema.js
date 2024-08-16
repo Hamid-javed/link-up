@@ -5,10 +5,10 @@ const postSchema = new mongoose.Schema({
   caption: { type: String,},
   content: { type: String },
   likes: [
-    {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      date: { type: Date, default: Date.now },
-    },
+    
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      
+    
   ],
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
   noOfLikes: {type: Number, default: 0},

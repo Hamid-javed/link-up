@@ -6,7 +6,10 @@ exports.addPost = async (req, res) => {
   try {
     const userId = req.id;
     const { caption } = req.body;
-    if(!caption && !req.file) return res.status(400).json({msg: "please add either image or caption"})
+    if (!caption && !req.file)
+      return res
+        .status(400)
+        .json({ msg: "please add either image or caption" });
     const user = await User.findOne({ _id: userId });
     const file = req.file;
     const post = new Post({
@@ -29,13 +32,13 @@ exports.addLike = async (req, res) => {
     const { postId } = req.params;
     const post = await Post.findOne({ _id: postId });
     if (!post) return res.status(400).json({ msg: "post not found" });
-    const alreadyLiked = post.likes.find(
-      (like) => like.user.toString() === userId.toString()
-    );
-    if (alreadyLiked)
+    const user = await User.findById(userId);
+    if (post.likes.includes(userId))
       return res.status(400).json({ msg: "Post already liked" });
-    post.likes.push({ user: userId });
+    post.likes.push(userId);
+    user.likedPosts.push(postId);
     await post.save();
+    await user.save();
     res.status(200).json({ msg: "post liked" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -44,13 +47,15 @@ exports.addLike = async (req, res) => {
 
 exports.delLike = async (req, res) => {
   try {
+    const userId = req.id;
     const { postId, likeId } = req.params;
     const post = await Post.findOne({ _id: postId });
     if (!post) return res.status(400).json({ msg: "post not found" });
-    const likeExists = post.likes.id(likeId);
-    if (!likeExists) return res.status(404).json({ msg: "Like not found" });
-    post.likes.pull(likeId);
-    await post.save();
+    const user = await User.findById(userId);
+    post.likes.pull(userId)
+    user.likedPosts.pull(postId)
+    await post.save()
+    await user.save()
     res.status(200).json({ msg: "like deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -64,14 +69,31 @@ exports.addComment = async (req, res) => {
     const { content } = req.body;
     const post = await Post.findById(postId);
     if (!post) return res.status(400).json({ msg: "post not found" });
-    const newComment = await Comment.create({
+    const newComment = new Comment({
       user: userId,
       post: postId,
       content: content,
     });
-    post.comments.push(newComment._id);
+    const savedComment = await newComment.save();
+    post.comments.push(savedComment._id);
     await post.save();
     res.status(200).json({ msg: "comment added" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.delComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const post = await Post.findById(postId);
+    if (!post) return res.status(400).json({ msg: "post not found" });
+    const comment = await Comment.findById(commentId)
+    if (!comment) return res.status(400).json({ msg: "comment not found" });
+    await Comment.deleteOne({_id: commentId})
+    post.comments.pull(commentId);
+    await post.save();
+    res.status(200).json({ msg: "comment deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
