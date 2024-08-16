@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   noOfFollowers: {type: Number, default: 0},
   noOfFollowing: {type: Number, default: 0},
   likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+  createdAt: {type: Date, default: Date.now},
   otp: { otp: { type: Number }, expireDate: { type: Number } },
 });
 

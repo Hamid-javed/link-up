@@ -6,7 +6,7 @@ const commentSchema = new mongoose.Schema({
   content: { type: String, required: true },
   likes: {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    date: { type: String, default: Date.now },
+    date: { type: Date, default: Date.now },
   },
   replies: { type: mongoose.Schema.Types.ObjectId, ref: "Comment" },
   noOfLikes: {type: Number, default: 0},
@@ -15,8 +15,8 @@ const commentSchema = new mongoose.Schema({
 });
 
 commentSchema.pre("save", function (next) {
-  const noOfLikes = this.likes.length
-  const noOfReplies = this.replies.length
+  const noOfLikes = this.likes.length ? this.likes.length : 0
+  const noOfReplies = this.replies.length ? this.replies.length : 0
 
 
   this.noOfLikes = noOfLikes;
