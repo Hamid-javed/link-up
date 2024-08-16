@@ -22,8 +22,8 @@ router.post("/reset-password", authControll.resetPassword);
 router.post("/change-password", verifyUserToken, authControll.changePassword);
 // To to delete a user accout
 router.delete("/delete", verifyUserToken, authControll.deleteUser);
-// To get user details
-router.get("/user-details", verifyUserToken, authControll.userData)
+
+
 
 
 

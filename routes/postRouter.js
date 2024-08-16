@@ -13,6 +13,10 @@ router.post("/comments/:commentId/like", verifyUserToken, postControl.likeCommen
 router.delete("/comments/:commentId/like", verifyUserToken, postControl.unLikeComment)
 router.post("/:postId/comments/add", verifyUserToken, postControl.addComment)
 router.delete("/:postId/comments/:commentId", verifyUserToken, postControl.delComment)
+router.post("/comments/:commentId/reply", verifyUserToken, postControl.addReply)
+router.get("/:postId/likes", verifyUserToken, postControl.getPostLikes)
+
+
 
 
 
