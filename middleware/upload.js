@@ -10,15 +10,16 @@ const storage = new CloudinaryStorage({
       format: async (req, file) => {
           // Extract the file extension and return it as the format
           const ext = file.mimetype.split('/')[1];
-          return ['jpeg', 'png', 'gif', 'bmp', 'tiff'].includes(ext) ? ext : 'jpeg';
+          return ['jpeg', 'png', "webp", 'bmp', 'tiff'].includes(ext) ? ext : 'jpeg';
       },
-      public_id: (req, file) => 'computed-filename-using-request'
+      public_id: (req, file) => `${req.id}`
   },
 });
 
 // File filter to allow only common image formats
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|bmp|tiff/;
+try {
+  const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff/;
   const mimetype = allowedTypes.test(file.mimetype);
   const extname = allowedTypes.test(file.originalname.toLowerCase().split('.').pop());
 
@@ -27,15 +28,17 @@ const fileFilter = (req, file, cb) => {
   } else {
       cb(new Error('Only image files are allowed!'));
   }
+} catch (error) {
+  console.log(error.message)
+  
+}
 };
 
 // Init upload
 exports.upload = multer({
   storage,
   limits: { fileSize: 1000000 }, // 1MB limit
-  fileFilter: (req, file, cb) => {
-    checkFileType(file, cb);
-  }
+  fileFilter: fileFilter
 }).single('image');
 
 

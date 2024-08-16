@@ -4,6 +4,9 @@ const bcrypt = require("bcrypt");
 const utils = require("../utils/utils");
 const nodemailer = require("nodemailer");
 const { SECRET_TOKEN } = require("../config/crypto");
+const cloudinary = require('../config/cloudinaryConfig');
+
+
 
 // Controller for user registeration
 exports.register = async (req, res) => {
@@ -20,12 +23,15 @@ exports.register = async (req, res) => {
 
 exports.addProfilePic = async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const userId = req.id
     const user = await User.findOne({_id: userId})
-    const file = req.file;
-    if (!file) return res.status(400).json({msg: "please provide an image"}) 
-    profilePic = `/images/profilePhotos/${file.filename}`;
-    user.profilePicture = profilePic
+    const url = req.file.path;
+    if (user.profilePicture) {
+      const publicId = user.profilePicture.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(publicId);
+    } 
+    user.profilePicture = url
     await user.save() 
     res.status(201).json({ msg: "profile picture added" });
   } catch (error) {
