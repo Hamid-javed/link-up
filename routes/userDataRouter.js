@@ -12,6 +12,7 @@ router.post("/follow/:userId",verifyUserToken, userDataControl.follow);
 router.delete("/follow/:userId",verifyUserToken, userDataControl.delFollow);
 router.get("/followers",verifyUserToken, userDataControl.getFollowers);
 router.get("/following",verifyUserToken, userDataControl.getFollowing);
+router.get("")
 
 
 
