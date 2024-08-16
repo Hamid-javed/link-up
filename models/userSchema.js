@@ -9,7 +9,20 @@ const userSchema = new mongoose.Schema({
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+  noOfFollowers: {type: Number, default: 0},
+  noOfFollowing: {type: Number, default: 0},
+  likedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
   otp: { otp: { type: Number }, expireDate: { type: Number } },
+});
+
+userSchema.pre("save", function (next) {
+  const noOfFollowers = this.followers.length
+  const noOfFollowing = this.following.length
+
+  this.noOfFollowers = noOfFollowers;
+  this.noOfFollowing = noOfFollowing
+
+  next();
 });
 
 

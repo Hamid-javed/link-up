@@ -22,5 +22,21 @@ exports.addPost = async (req, res) => {
     }
 }
 
+exports.addLike = async (req, res) => {
+  try {
+    const userId = req.id;
+    const {postId} = req.params;
+    const post = await Post.findOne({_id: postId});
+    if(!post) return res.status(400).json({msg: "post not found"})
+    post.likes.push({user: userId});
+    await post.save()
+    res.status(200).json({msg: "post liked"})
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+    
+  }    
+}
+
+
 
 
