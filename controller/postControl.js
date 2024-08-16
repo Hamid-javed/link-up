@@ -26,6 +26,30 @@ exports.addPost = async (req, res) => {
     }
 };
 
+exports.updatePost = async (req, res) => {
+    try {
+        const { newCaption } = req.body;
+        const { postId } = req.params;
+        const userPost = await Post.findOne({ _id: postId });
+        userPost.caption = newCaption || userPost.caption
+        userPost.save();
+        res.status(201).json({ message: "Post Updated!" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deletePost = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        await Post.deleteOne({ _id: postId });
+        res.status(201).json({ message: "Post deleted!" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 exports.addLike = async (req, res) => {
     try {
         const userId = req.id;

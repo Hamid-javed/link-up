@@ -6,7 +6,6 @@ const userRouter = require("./routes/userRouter")
 const postRouter = require("./routes/postRouter")
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const path = require('path');
 
 const port = process.env.port
 
