@@ -1,6 +1,5 @@
 const User = require("../models/userSchema");
 
-
 // send user details
 exports.userData = async (req, res) => {
   try {
@@ -19,7 +18,6 @@ exports.userData = async (req, res) => {
       followers: userData.noOfFollowers,
       following: userData.noOfFollowing,
       profilePic: userData.profilePicture,
-
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -28,9 +26,9 @@ exports.userData = async (req, res) => {
 
 exports.userDataByUserId = async (req, res) => {
   try {
-    const {userId} = req.params;
+    const { userId } = req.params;
     const user = await User.findOne({ _id: userId });
-    if(!user) return res.status(200).json({msg: "user not found"})
+    if (!user) return res.status(200).json({ msg: "user not found" });
     res.status(200).json({
       id: user._id,
       name: user.name,
@@ -62,7 +60,7 @@ exports.getPosts = async (req, res) => {
       populate: [
         {
           path: "user",
-          select: "name email profilePicture",
+          select: "name profilePicture",
         },
       ],
     });
@@ -92,7 +90,7 @@ exports.getPosts = async (req, res) => {
 
 exports.getPostsByUserId = async (req, res) => {
   try {
-    const {userId} = req.params;
+    const { userId } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 25;
 
@@ -109,7 +107,7 @@ exports.getPostsByUserId = async (req, res) => {
       populate: [
         {
           path: "user",
-          select: "name email profilePicture",
+          select: "name profilePicture",
         },
       ],
     });
@@ -137,19 +135,18 @@ exports.getPostsByUserId = async (req, res) => {
   }
 };
 
-
-
 exports.follow = async (req, res) => {
   try {
     const user = await User.findById(req.id);
-    const {userId} = req.params
-    if(user.following.includes(userId)) return res.status(404).json({msg: "already following"})
-    const userToAdd = await User.findById(userId)
-    if(!userToAdd) return res.status(400).json({msg: "user not found"})
-    user.following.push(userId)
-    userToAdd.followers.push(req.id)
-    await user.save()
-    await userToAdd.save()  
+    const { userId } = req.params;
+    if (user.following.includes(userId))
+      return res.status(404).json({ msg: "already following" });
+    const userToAdd = await User.findById(userId);
+    if (!userToAdd) return res.status(400).json({ msg: "user not found" });
+    user.following.push(userId);
+    userToAdd.followers.push(req.id);
+    await user.save();
+    await userToAdd.save();
     res.status(200).json({ message: "follow successful" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -159,13 +156,13 @@ exports.follow = async (req, res) => {
 exports.delFollow = async (req, res) => {
   try {
     const user = await User.findById(req.id);
-    const {userId} = req.params
-    const userToDel = await User.findById(userId)
-    if(!userToDel) return res.status(400).json({msg: "user not found"})
-    user.following.pull(userId)
-    userToDel.followers.pull(req.id)
-    await user.save()
-    await userToDel.save()  
+    const { userId } = req.params;
+    const userToDel = await User.findById(userId);
+    if (!userToDel) return res.status(400).json({ msg: "user not found" });
+    user.following.pull(userId);
+    userToDel.followers.pull(req.id);
+    await user.save();
+    await userToDel.save();
     res.status(200).json({ message: "unfollowed user" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -206,7 +203,6 @@ exports.getFollowers = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.getFollowing = async (req, res) => {
   try {
