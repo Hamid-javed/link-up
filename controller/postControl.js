@@ -62,6 +62,38 @@ exports.delLike = async (req, res) => {
   }
 };
 
+exports.likeComment = async (req, res) => {
+    try {
+      const userId = req.id;
+      const { commentId } = req.params;
+      const comment = await Comment.findById(commentId)
+      if(!comment) return res.status(400).json({ msg: "comment not found" });
+      if (comment.likes.includes(userId))
+        return res.status(400).json({ msg: "comment already liked" });
+      comment.likes.push(userId)
+      await comment.save()
+      res.status(200).json({ msg: "comment liked" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+
+exports.unLikeComment = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { commentId } = req.params;
+    const comment = await Comment.findById(commentId)
+    if(!comment) return res.status(400).json({ msg: "comment not found" });
+    comment.likes.pull(userId)
+    await comment.save()
+    res.status(200).json({ msg: "comment unliked" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+    
+  }
+}
+
+
 exports.addComment = async (req, res) => {
   try {
     const userId = req.id;
