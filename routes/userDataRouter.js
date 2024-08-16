@@ -22,5 +22,4 @@ router.get("/liked",verifyUserToken, userDataControl.getLiked);
 
 
 
-
 module.exports = router;
