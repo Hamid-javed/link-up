@@ -16,8 +16,6 @@ app.use(express.json())
 
 app.use("/posts", postRouter)
 app.use("/auth", userRouter)
-app.use('/images/profilePhotos', express.static(path.join(__dirname, 'uploads/profilePhotos')));
-
 
 
 mongoose.connect(
