@@ -1,7 +1,6 @@
 const Post = require("../models/postSchema");
 const User = require("../models/userSchema");
 const Comment = require("../models/commentSchema");
-const { post } = require("moongose/routes");
 
 exports.addPost = async (req, res) => {
     try {
@@ -199,7 +198,6 @@ exports.addReply = async (req, res) => {
 };
 
 exports.getPostLikes = async (req, res) => {
-<<<<<<< HEAD
   try {
     const { postId } = req.params;
     const page = parseInt(req.query.page) || 1;
@@ -315,7 +313,6 @@ exports.getCommentLikes = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-=======
     try {
         const { postId } = req.params;
         const page = parseInt(req.query.page) || 1;
@@ -334,5 +331,4 @@ exports.getCommentLikes = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
->>>>>>> ffb8d0362ec08daacdfbf1d6abfe4da38c1f4ad5
 };
