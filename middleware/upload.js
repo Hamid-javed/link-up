@@ -29,8 +29,7 @@ try {
 } catch (error) {
   console.log(error.message)
   
-}
-};
+}};
 
 exports.upload = multer({
   storage,
