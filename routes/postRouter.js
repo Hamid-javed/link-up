@@ -1,10 +1,10 @@
 const router = require("express").Router();
 const postControl = require("../controller/postControl");
 const { verifyUserToken } = require("../middleware/authUser");
-const { upload } = require("../middleware/upload");
+const { post } = require("../middleware/post");
 
 
-router.post("/add", postControl.addPost)
+router.post("/add", verifyUserToken, post, postControl.addPost)
 
 
 
