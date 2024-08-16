@@ -237,3 +237,47 @@ exports.getFollowing = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getLiked = async (req, res) => {
+  try {
+    const userId = req.id
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const user = await User.findById(userId).populate({
+      path: "likedPosts",
+      options: {
+        skip: (page - 1) * limit,
+        limit: limit,
+        sort: { createdAt: -1 },
+      },
+      populate: [
+        {
+          path: "user",
+          select: "name profilePicture",
+        },
+      ],
+    });
+
+    const posts = user.likedPosts.map((post) => {
+      return {
+        id: post._id,
+        user: post.user,
+        caption: post.caption,
+        content: post.content,
+        noOfLikes: post.noOfLikes,
+        noOfComments: post.noOfComments,
+        createdAt: post.createdAt,
+      };
+    });
+
+    res.json({
+      page,
+      limit,
+      totalPosts: user.posts.length,
+      posts,
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

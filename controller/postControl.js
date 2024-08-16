@@ -113,6 +113,23 @@ exports.addComment = async (req, res) => {
   }
 };
 
+exports.updComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const { content } = req.body;
+    if(!content) return res.status(400).json({ msg: "no content sent" });
+    const post = await Post.findById(postId);
+    if (!post) return res.status(400).json({ msg: "post not found" });
+    const comment = await Comment.findById(commentId);
+    if (!comment) return res.status(400).json({ msg: "comment not found" });
+    comment.content = content
+    await comment.save()
+    res.status(200).json({ msg: "comment updated" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.delComment = async (req, res) => {
   try {
     const { postId, commentId } = req.params;
@@ -165,7 +182,104 @@ exports.getPostLikes = async (req, res) => {
     });
     if (!post) return res.status(400).json({ msg: "post not found" });
     const likes = post.likes;
-    res.status(200).json(likes);
+    res.json({
+      page,
+      limit,
+      totalLikes: post.likes.length,
+      likes
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getPostComments = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const post = await Post.findById(postId).populate({
+      path: "comments",
+      select: "content noOfLikes noOfReplies user",
+      options: {
+        skip: (page - 1) * limit,
+        limit: limit,
+      },
+      populate: [
+        {
+          path: "user",
+          select: "name profilePicture",
+        },
+     
+      ],
+    });
+    if (!post) return res.status(400).json({ msg: "post not found" });
+    const comments = post.comments;
+    res.json({
+      page,
+      limit,
+      totalComments: post.comments.length,
+      comments
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getCommentReplies = async (req, res) => {
+  try {
+    const {commentId} = req.params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const comment = await Comment.findById(commentId).populate({
+      path: "replies",
+      select: "content noOfLikes noOfReplies user",
+      options: {
+        skip: (page - 1) * limit,
+        limit: limit,
+      },
+      populate: [
+        {
+          path: "user",
+          select: "name profilePicture",
+        },
+      ],
+    });
+    if (!comment) return res.status(400).json({ msg: "comment not found" });
+    const replies = comment.replies;
+    res.json({
+      page,
+      limit,
+      totalComments: comment.replies.length,
+      replies
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getCommentLikes = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const comment = await Comment.findById(commentId).populate({
+      path: "likes",
+      select: "name _id",
+      options: {
+        skip: (page - 1) * limit,
+        limit: limit,
+      }
+    });
+    if (!comment) return res.status(400).json({ msg: "comment not found" });
+    const likes = comment.likes;
+    console.log(comment)
+    res.json({
+      page,
+      limit,
+      totalLikes: comment.likes.length,
+      likes
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
