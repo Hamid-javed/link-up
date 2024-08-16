@@ -24,9 +24,9 @@ exports.addProfilePic = async (req, res) => {
     const user = await User.findOne({_id: userId})
     const file = req.file;
     if (!file) return res.status(400).json({msg: "please provide an image"}) 
-      profilePic = `/images/profilePhotos/${file.filename}`;
+    profilePic = `/images/profilePhotos/${file.filename}`;
     user.profilePicture = profilePic
-    await user.save()
+    await user.save() 
     res.status(201).json({ msg: "profile picture added" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -3,6 +3,7 @@ const app = express()
 const mongoose = require("mongoose");
 require("dotenv").config()
 const userRouter = require("./routes/userRouter")
+const postRouter = require("./routes/postRouter")
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
@@ -13,7 +14,7 @@ app.use(cookieParser());
 app.use(cors());
 app.use(express.json())
 
-
+app.use("/posts", postRouter)
 app.use("/auth", userRouter)
 app.use('/images/profilePhotos', express.static(path.join(__dirname, 'uploads/profilePhotos')));
 
