@@ -69,6 +69,9 @@ exports.deletePost = async (req, res) => {
     if (!userPost) {
       return res.status(404).json({ message: "post not found!" });
     }
+    // probably x !== y
+    // or try to use .equals to compare mongodb object id. ie x=(objectid), y=(obejctid), z=(String)
+    // x.equals(y) = true; x.equals(z) = false;
     if (!userPost.user === userId) {
       return res.status(405).json({ messgae: "Not your post!" });
     }
