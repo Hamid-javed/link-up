@@ -13,6 +13,7 @@ router.delete("/follow/:userId",verifyUserToken, userDataControl.delFollow);
 router.get("/followers",verifyUserToken, userDataControl.getFollowers);
 router.get("/following",verifyUserToken, userDataControl.getFollowing);
 router.get("/liked",verifyUserToken, userDataControl.getLiked);
+router.get("/search-users", userDataControl.searchUser)
 
 
 
