@@ -340,11 +340,11 @@ exports.searchGroups = async (req, res) => {
     const totalPages = Math.ceil(totalCount / limit);
 
     const groupsToSend = groups.map((group) => {
-        return {
-            id: group._id,
-            name: group.name,
-            members: group.noOfMembers
-        }
+      return {
+        id: group._id,
+        name: group.name,
+        members: group.noOfMembers
+      }
     })
 
     res.status(200).json({
@@ -360,38 +360,38 @@ exports.searchGroups = async (req, res) => {
 };
 
 exports.joinGroup = async (req, res) => {
-    try {
-      const userId = req.id;
-      const {groupId} = req.params;
-      const group = await Group.findById(groupId);
-      if (!group) return res.status(400).json({ msg: "group not found" });
-      if (group.private) return res.status(403).json({ msg: "group is private, only admins can add members" });
-      if (group.members.includes(userId))
-        return res.status(400).json({ msg: "the user is already an member" });
-      const user = await User.findById(userId)
-      user.groups.push(groupId)
-      group.members.push(userId);
-      await user.save()
-      await group.save();
-      res.status(200).json({ msg: "joined group" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+  try {
+    const userId = req.id;
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(400).json({ msg: "group not found" });
+    if (group.private) return res.status(403).json({ msg: "group is private, only admins can add members" });
+    if (group.members.includes(userId))
+      return res.status(400).json({ msg: "the user is already an member" });
+    const user = await User.findById(userId)
+    user.groups.push(groupId)
+    group.members.push(userId);
+    await user.save()
+    await group.save();
+    res.status(200).json({ msg: "joined group" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  exports.leaveGroup = async (req, res) => {
-    try {
-      const userId = req.id;
-      const {groupId} = req.params;
-      const group = await Group.findById(groupId);
-      if (!group) return res.status(400).json({ msg: "group not found" });
-      const user = await User.findById(userId)
-      user.groups.pull(groupId);
-      group.members.pull(userId);
-      await user.save()
-      await group.save();
-      res.status(200).json({ msg: "group left" });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+exports.leaveGroup = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(400).json({ msg: "group not found" });
+    const user = await User.findById(userId)
+    user.groups.pull(groupId);
+    group.members.pull(userId);
+    await user.save()
+    await group.save();
+    res.status(200).json({ msg: "group left" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
