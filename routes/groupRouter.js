@@ -6,7 +6,21 @@ const { verifyUserToken } = require("../middleware/authUser");
 
 router.post("/create", verifyUserToken, groupControl.createGroup)
 router.post("/:groupId/posts/add", verifyUserToken, postControl.addPost)
-router.delete("/:groupId/posts/del", verifyUserToken, postControl.deletePost)
+router.delete("/:groupId/admin/posts/:postId/delete", verifyUserToken, groupControl.delPostAdmin)
+router.delete('/:groupId/admin/posts/:postId/commnets/:commentId/delete', verifyUserToken, groupControl.delComment)
+router.post('/:groupId/admin/add-admin/:userId', verifyUserToken, groupControl.addAdmin)
+router.delete('/:groupId/admin/del-admin/:userId', verifyUserToken, groupControl.delAdmin)
+router.post('/:groupId/admin/add-member/:userId', verifyUserToken, groupControl.addMember)
+router.delete('/:groupId/admin/del-member/:userId', verifyUserToken, groupControl.delMember)
+router.get("/:groupId/get-admins", verifyUserToken, groupControl.getAdmins)
+router.get("/:groupId/get-members", verifyUserToken, groupControl.getMembers)
+router.get("/:groupId/get-members/search", verifyUserToken, groupControl.searchMembers)
+router.get("/:groupId/posts/get", verifyUserToken, groupControl.getPosts)
+
+
+
+
+
 
 
 

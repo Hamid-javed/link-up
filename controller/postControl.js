@@ -10,6 +10,15 @@ exports.addPost = async (req, res) => {
     const userId = req.id;
     const { caption } = req.body;
     const { groupId } = req.params;
+    let groupGiven = null;
+    let group;
+    if(groupId) {
+      group = await Group.findById(groupId)
+      if(!group) return res.status(400).json({msg: "group not found"})
+      if(!group.members.includes(userId)) return res.status(403).json({msg: "you are not a member"})
+      groupGiven = groupId
+    }
+
     if (!caption && !req.file)
       return res
         .status(400)
@@ -20,16 +29,16 @@ exports.addPost = async (req, res) => {
       user: userId,
       caption: caption ? caption : "",
       content: file ? file.path : "",
-      group: groupId ? groupId : null
+      group: groupGiven ? groupGiven : null
     });
     const newPost = await post.save();
+   if(groupGiven) {
+    group.posts.push(newPost._id)
+    await group.save()
+   }
     user.posts.push(newPost._id);
     await user.save();
-    if(groupId) {
-      const group = await Group.findById(groupId)
-      group.posts.push(newPost._id)
-      await group.save()
-    }
+
     res.status(201).json({ message: "Post added!" });
   } catch (error) {
     res.status(500).json({ message: error.message });
