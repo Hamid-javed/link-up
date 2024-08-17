@@ -51,6 +51,10 @@ exports.updatePost = async (req, res) => {
     const { newCaption } = req.body;
     const { postId } = req.params;
     const userPost = await Post.findOne({ _id: postId });
+        // probably x !== y
+    // or try to use .equals to compare mongodb object id. ie x=(objectid), y=(obejctid), z=(String)
+    // x.equals(y) = true; x.equals(z) = false;
+    // test it thoroughly before pushing please
     if (!userPost.user === userId) {
       return res.status(405).json({ message: "Not your post!" });
     }
@@ -72,6 +76,7 @@ exports.deletePost = async (req, res) => {
     // probably x !== y
     // or try to use .equals to compare mongodb object id. ie x=(objectid), y=(obejctid), z=(String)
     // x.equals(y) = true; x.equals(z) = false;
+    // test it thoroughly before pushing please
     if (!userPost.user === userId) {
       return res.status(405).json({ messgae: "Not your post!" });
     }
