@@ -15,6 +15,9 @@ exports.createGroup = async (req, res) => {
       private: private ? private : false
     });
     const savedGroup = await group.save();
+    const user = await User.findById(req.id)
+    user.groups.push(savedGroup._id)
+    await user.save()
     res.status(201).json({ msg: "group created" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -31,6 +34,16 @@ exports.delGroup = async (req, res) => {
       return res
         .status(403)
         .json({ msg: "not authorized to delete this group" });
+    const members = group.members
+    await User.updateMany(
+      { _id: { $in: members } },
+      { $pull: { groups: groupId } }
+    );
+    const admins = group.admins
+    await User.updateMany(
+      { _id: { $in: admins } },
+      { $pull: { groups: groupId } }
+    );
     await Group.deleteOne({ _id: groupId });
     res.status(201).json({ msg: "group deleted" });
   } catch (error) {
@@ -106,6 +119,9 @@ exports.addAdmin = async (req, res) => {
     if (group.admins.includes(userId))
       return res.status(400).json({ msg: "the user is already an admin" });
     group.admins.push(userId);
+    group.members.push(userId);
+    userToAdd.groups.push(groupId)
+    await userToAdd.save()
     await group.save();
     res.status(200).json({ msg: "admin added" });
   } catch (error) {
@@ -122,6 +138,10 @@ exports.delAdmin = async (req, res) => {
     if (!group.admins.includes(user))
       return res.status(403).json({ msg: "not authorized delete admin" });
     group.admins.pull(userId);
+    group.members.pull(userId);
+    const userToDel = await User.findById(userId)
+    userToDel.groups.pull(groupId)
+    await userToDel.save()
     await group.save();
     res.status(200).json({ msg: "admin deleted" });
   } catch (error) {
@@ -142,6 +162,8 @@ exports.addMember = async (req, res) => {
     if (group.members.includes(userId))
       return res.status(400).json({ msg: "the user is already an member" });
     group.members.push(userId);
+    userToAdd.groups.push(groupId)
+    await userToAdd.save()
     await group.save();
     res.status(200).json({ msg: "member added" });
   } catch (error) {
@@ -157,7 +179,10 @@ exports.delMember = async (req, res) => {
     if (!group) return res.status(400).json({ msg: "group not found" });
     if (!group.admins.includes(user))
       return res.status(403).json({ msg: "not authorized delete member" });
+    const userToDel = await User.findById(userId);
     group.members.pull(userId);
+    userToDel.groups.pull(groupId)
+    await userToDel.save()
     await group.save();
     res.status(200).json({ msg: "member deleted" });
   } catch (error) {
@@ -343,7 +368,10 @@ exports.joinGroup = async (req, res) => {
       if (group.private) return res.status(403).json({ msg: "group is private, only admins can add members" });
       if (group.members.includes(userId))
         return res.status(400).json({ msg: "the user is already an member" });
+      const user = await User.findById(userId)
+      user.groups.push(groupId)
       group.members.push(userId);
+      await user.save()
       await group.save();
       res.status(200).json({ msg: "joined group" });
     } catch (error) {
@@ -357,7 +385,10 @@ exports.joinGroup = async (req, res) => {
       const {groupId} = req.params;
       const group = await Group.findById(groupId);
       if (!group) return res.status(400).json({ msg: "group not found" });
+      const user = await User.findById(userId)
+      user.groups.pull(groupId);
       group.members.pull(userId);
+      await user.save()
       await group.save();
       res.status(200).json({ msg: "group left" });
     } catch (error) {
