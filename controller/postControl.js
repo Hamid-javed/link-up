@@ -220,7 +220,7 @@ exports.getPostLikes = async (req, res) => {
     res.json({
       page,
       limit,
-      totalLikes: post.likes.length,
+      totalPages: Math.ceil(post.likes.length / limit),
       likes
     });
   } catch (error) {
@@ -253,7 +253,7 @@ exports.getPostComments = async (req, res) => {
     res.json({
       page,
       limit,
-      totalComments: post.comments.length,
+      totalPages: Math.ceil(post.comments.length / limit),
       comments
     });
   } catch (error) {
@@ -285,7 +285,7 @@ exports.getCommentReplies = async (req, res) => {
     res.json({
       page,
       limit,
-      totalComments: comment.replies.length,
+      totalPages: Math.ceil(comment.replies.length / limit),
       replies
     });
   } catch (error) {
@@ -308,12 +308,68 @@ exports.getCommentLikes = async (req, res) => {
     });
     if (!comment) return res.status(400).json({ msg: "comment not found" });
     const likes = comment.likes;
-    console.log(comment)
     res.json({
       page,
       limit,
-      totalLikes: comment.likes.length,
+      totalPages: Math.ceil(comment.likes.length / limit),
       likes
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getFeed = async (req, res) => {
+  try {
+    const userId = req.id;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    const user = await User.findById(userId);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const followingIds = user.following;
+
+    const totalFollowedPostsCount = await Post.countDocuments({ user: { $in: followingIds } });
+    const totalOtherPostsCount = await Post.countDocuments({ user: { $nin: followingIds } });
+
+    const totalPostsCount = totalFollowedPostsCount + totalOtherPostsCount;
+    const totalPages = Math.ceil(totalPostsCount / limit);
+
+    const followedPosts = await Post.find({ user: { $in: followingIds } }).populate({path: "user", select: "name profilePicture"})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    let posts = followedPosts;
+
+    if (followedPosts.length < limit) {
+      const additionalPosts = await Post.find({ user: { $nin: followingIds } }).populate({path: "user", select: "name profilePicture"})
+        .sort({ createdAt: -1 })
+        .skip(Math.max(0, skip - followedPosts.length))
+        .limit(limit - followedPosts.length);
+      posts = posts.concat(additionalPosts);
+    }
+    
+    const postsToSend = posts.map((post) => {
+      return {
+        id: post._id,
+        user: post.user,
+        caption: post.caption,
+        content: post.content,
+        noOfLikes: post.noOfLikes,
+        noOfComments: post.noOfComments,
+        createdAt: post.createdAt,
+      };
+    });
+
+    res.status(200).json({
+      page,
+      limit,
+      totalPages,
+      postsToSend
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
