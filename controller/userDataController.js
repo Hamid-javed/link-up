@@ -287,6 +287,7 @@ exports.searchUser = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    // make sure query is provided otherwse do not send anything back
 
     const searchPattern = new RegExp(query, 'i');
     const users = await User.find({ name: { $regex: searchPattern }}).skip(skip).limit(limit);
@@ -297,6 +298,9 @@ exports.searchUser = async (req, res) => {
       follwers: user.followers,// no of followers
       follwing: user.following// no of following
     }))
+
+    // total pages is wrong, dont get totalUsers, get totalResults.
+    // then total pages will be totalResults / limit
     const totalUsers = await User.countDocuments();
     const totalPages = Math.ceil(totalUsers / limit);
     res.status(200).json({
