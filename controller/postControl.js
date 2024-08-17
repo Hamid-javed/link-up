@@ -41,7 +41,7 @@ exports.updatePost = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
+//todo remove post from user
 exports.deletePost = async (req, res) => {
     try {
         const { postId } = req.params;
