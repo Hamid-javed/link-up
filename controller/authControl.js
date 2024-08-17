@@ -235,4 +235,18 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-
+exports.delProfilePic = async (req, res) => {
+  try {
+    const userId = req.id
+    const user = await User.findOne({_id: userId})
+    if (user.profilePicture) {
+      const publicId = user.profilePicture.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(publicId);
+    } 
+    user.profilePicture = ""
+    await user.save() 
+    res.status(201).json({ msg: "profile picture deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

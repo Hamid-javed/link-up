@@ -64,6 +64,7 @@ exports.getPosts = async (req, res) => {
         },
       ],
     });
+    console.log(user)
 
     const posts = user.posts.map((post) => {
       return {
@@ -76,11 +77,13 @@ exports.getPosts = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
-
+    const countPosts = await User.findById(userId)
+    const totalPages = Math.ceil(countPosts.posts.length / limit)
+   
     res.json({
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       posts,
     });
   } catch (error) {
@@ -123,11 +126,13 @@ exports.getPostsByUserId = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
+    const countPosts = await User.findById(userId)
+    const totalPages = Math.ceil(countPosts.posts.length / limit)
 
     res.json({
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       posts,
     });
   } catch (error) {
@@ -191,10 +196,12 @@ exports.getFollowers = async (req, res) => {
         profilePicture: follower.profilePicture,
       };
     });
+    const countFollowers = await User.findById(userId)
+    const totalPages = Math.ceil(countFollowers.followers.length / limit)
     const results = {
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       followers,
     };
 
@@ -225,10 +232,12 @@ exports.getFollowing = async (req, res) => {
         profilePicture: follower.profilePicture,
       };
     });
+    const countFollowing = await User.findById(userId)
+    const totalPages = Math.ceil(countFollowing.following.length / limit)
     const results = {
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       following,
     };
 
@@ -237,6 +246,51 @@ exports.getFollowing = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getLiked = async (req, res) => {
+  try {
+    const userId = req.id
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 25;
+    const user = await User.findById(userId).populate({
+      path: "likedPosts",
+      options: {
+        skip: (page - 1) * limit,
+        limit: limit,
+        sort: { createdAt: -1 },
+      },
+      populate: [
+        {
+          path: "user",
+          select: "name profilePicture",
+        },
+      ],
+    });
+
+    const posts = user.likedPosts.map((post) => {
+      return {
+        id: post._id,
+        user: post.user,
+        caption: post.caption,
+        content: post.content,
+        noOfLikes: post.noOfLikes,
+        noOfComments: post.noOfComments,
+        createdAt: post.createdAt,
+      };
+    });
+    const countLikes = await User.findById(userId)
+    const totalPages = Math.ceil(countLikes.likedPosts.length / limit)
+
+    res.json({
+      page,
+      limit,
+      totalPages,
+      posts,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }}
+
 
 exports.searchUser = async (req, res) => {
   try {
