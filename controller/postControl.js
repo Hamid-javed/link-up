@@ -43,6 +43,8 @@ exports.updatePost = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
 exports.deletePost = async (req, res) => {
     try {
         const { postId } = req.params;
@@ -51,8 +53,8 @@ exports.deletePost = async (req, res) => {
         if (!userPost) {
             return res.status(404).json({ message: "post not found!" });
         }
-        if (!userPost.user === userId) {
-            return res.status(405).json({ messgae: "Not your post!" });
+        if (userPost.user.toString() !== userId.toString()) {
+            return res.status(403).json({ message: "Not your post!" });
         }
         await Post.deleteOne({ _id: postId });
         const user = await User.findById(userId);
