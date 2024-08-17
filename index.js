@@ -5,6 +5,7 @@ require("dotenv").config()
 const userRouter = require("./routes/userRouter")
 const postRouter = require("./routes/postRouter")
 const userDataRouter = require("./routes/userDataRouter")
+const groupRouter = require("./routes/groupRouter")
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
@@ -17,6 +18,8 @@ app.use(express.json())
 app.use("/posts", postRouter)
 app.use("/user-data", userDataRouter)
 app.use("/auth", userRouter)
+app.use("/groups", groupRouter)
+
 
 
 mongoose.connect(

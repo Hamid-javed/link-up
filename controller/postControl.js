@@ -2,11 +2,14 @@ const Post = require("../models/postSchema");
 const User = require("../models/userSchema");
 const Comment = require("../models/commentSchema");
 const Story = require("../models/storySchema")
+const Group = require("../models/groupSchema")
+
 
 exports.addPost = async (req, res) => {
   try {
     const userId = req.id;
     const { caption } = req.body;
+    const { groupId } = req.params;
     if (!caption && !req.file)
       return res
         .status(400)
@@ -17,10 +20,16 @@ exports.addPost = async (req, res) => {
       user: userId,
       caption: caption ? caption : "",
       content: file ? file.path : "",
+      group: groupId ? groupId : null
     });
     const newPost = await post.save();
     user.posts.push(newPost._id);
     await user.save();
+    if(groupId) {
+      const group = await Group.findById(groupId)
+      group.posts.push(newPost._id)
+      await group.save()
+    }
     res.status(201).json({ message: "Post added!" });
   } catch (error) {
     res.status(500).json({ message: error.message });
