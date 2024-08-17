@@ -7,6 +7,7 @@ const groupSchema = new mongoose.Schema({
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   noOfMembers: {type: Number, default: 0},
   posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
+  private: {type: Boolean, default: false},
   createdAt: { type: Date, default: Date.now },
 });
 

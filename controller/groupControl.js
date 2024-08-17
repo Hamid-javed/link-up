@@ -5,16 +5,34 @@ const Comment = require("../models/commentSchema");
 
 exports.createGroup = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, private } = req.body;
     if (!name) return res.status(400).json({ msg: "Name is required" });
     const group = new Group({
       name,
       description,
       admins: [req.id],
       members: [req.id],
+      private: private ? private : false
     });
     const savedGroup = await group.save();
     res.status(201).json({ msg: "group created" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.delGroup = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(400).json({ msg: "group not found" });
+    if (!group.admins.includes(userId))
+      return res
+        .status(403)
+        .json({ msg: "not authorized to delete this group" });
+    await Group.deleteOne({ _id: groupId });
+    res.status(201).json({ msg: "group deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -256,8 +274,8 @@ exports.getPosts = async (req, res) => {
     const group = await Group.findById(groupId).populate({
       path: "posts",
       select: "user group caption content noOfLikes noOfComments",
-      options: { skip: skip, limit: limit, sort: { createdAt: -1 }, },
-      
+      options: { skip: skip, limit: limit, sort: { createdAt: -1 } },
+
       populate: [
         {
           path: "user",
@@ -280,3 +298,69 @@ exports.getPosts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.searchGroups = async (req, res) => {
+  try {
+    const { query } = req.query || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const regex = query ? new RegExp(query, "i") : ""
+
+    const searchPattern = query ? { name: { $regex: regex } } : {}
+
+    const groups = await Group.find(searchPattern).skip(skip).limit(limit);
+
+    const totalCount = await Group.countDocuments(searchPattern);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const groupsToSend = groups.map((group) => {
+        return {
+            id: group._id,
+            name: group.name,
+            members: group.noOfMembers
+        }
+    })
+
+    res.status(200).json({
+      page,
+      limit,
+      totalPages,
+      totalResults: totalCount,
+      results: groupsToSend
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.joinGroup = async (req, res) => {
+    try {
+      const userId = req.id;
+      const {groupId} = req.params;
+      const group = await Group.findById(groupId);
+      if (!group) return res.status(400).json({ msg: "group not found" });
+      if (group.private) return res.status(403).json({ msg: "group is private, only admins can add members" });
+      if (group.members.includes(userId))
+        return res.status(400).json({ msg: "the user is already an member" });
+      group.members.push(userId);
+      await group.save();
+      res.status(200).json({ msg: "joined group" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+
+  exports.leaveGroup = async (req, res) => {
+    try {
+      const userId = req.id;
+      const {groupId} = req.params;
+      const group = await Group.findById(groupId);
+      if (!group) return res.status(400).json({ msg: "group not found" });
+      group.members.pull(userId);
+      await group.save();
+      res.status(200).json({ msg: "group left" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };

@@ -5,6 +5,7 @@ const { verifyUserToken } = require("../middleware/authUser");
 
 
 router.post("/create", verifyUserToken, groupControl.createGroup)
+router.delete("/:groupId/admin/delete", verifyUserToken, groupControl.delGroup)
 router.post("/:groupId/posts/add", verifyUserToken, postControl.addPost)
 router.delete("/:groupId/admin/posts/:postId/delete", verifyUserToken, groupControl.delPostAdmin)
 router.delete('/:groupId/admin/posts/:postId/commnets/:commentId/delete', verifyUserToken, groupControl.delComment)
@@ -16,6 +17,11 @@ router.get("/:groupId/get-admins", verifyUserToken, groupControl.getAdmins)
 router.get("/:groupId/get-members", verifyUserToken, groupControl.getMembers)
 router.get("/:groupId/get-members/search", verifyUserToken, groupControl.searchMembers)
 router.get("/:groupId/posts/get", verifyUserToken, groupControl.getPosts)
+router.get("/search", verifyUserToken, groupControl.searchGroups)
+router.post("/:groupId/join", verifyUserToken, groupControl.joinGroup)
+router.post("/:groupId/leave", verifyUserToken, groupControl.leaveGroup)
+
+
 
 
 
