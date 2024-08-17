@@ -64,6 +64,7 @@ exports.getPosts = async (req, res) => {
         },
       ],
     });
+    console.log(user)
 
     const posts = user.posts.map((post) => {
       return {
@@ -76,11 +77,13 @@ exports.getPosts = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
-
+    const countPosts = await User.findById(userId)
+    const totalPages = Math.ceil(countPosts.posts.length / limit)
+   
     res.json({
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       posts,
     });
   } catch (error) {
@@ -123,11 +126,13 @@ exports.getPostsByUserId = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
+    const countPosts = await User.findById(userId)
+    const totalPages = Math.ceil(countPosts.posts.length / limit)
 
     res.json({
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       posts,
     });
   } catch (error) {
@@ -191,10 +196,12 @@ exports.getFollowers = async (req, res) => {
         profilePicture: follower.profilePicture,
       };
     });
+    const countFollowers = await User.findById(userId)
+    const totalPages = Math.ceil(countFollowers.followers.length / limit)
     const results = {
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       followers,
     };
 
@@ -225,10 +232,12 @@ exports.getFollowing = async (req, res) => {
         profilePicture: follower.profilePicture,
       };
     });
+    const countFollowing = await User.findById(userId)
+    const totalPages = Math.ceil(countFollowing.following.length / limit)
     const results = {
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       following,
     };
 
@@ -269,11 +278,13 @@ exports.getLiked = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
+    const countLikes = await User.findById(userId)
+    const totalPages = Math.ceil(countLikes.likedPosts.length / limit)
 
     res.json({
       page,
       limit,
-      totalPosts: user.posts.length,
+      totalPages,
       posts,
     });
   } catch (error) {

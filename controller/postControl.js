@@ -132,6 +132,7 @@ exports.addComment = async (req, res) => {
     const userId = req.id;
     const { postId } = req.params;
     const { content } = req.body;
+    if(!content) return res.status(400).json({ msg: "no content sent" });
     const post = await Post.findById(postId);
     if (!post) return res.status(400).json({ msg: "post not found" });
     const newComment = new Comment({
@@ -185,6 +186,7 @@ exports.addReply = async (req, res) => {
   try {
     const userId = req.id;
     const { content } = req.body;
+    if (!content) return res.status(400).json({ msg: "cannot post empty reply" });
     const { commentId } = req.params;
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(400).json({ msg: "comment not found" });
@@ -217,10 +219,12 @@ exports.getPostLikes = async (req, res) => {
     });
     if (!post) return res.status(400).json({ msg: "post not found" });
     const likes = post.likes;
+    const countLikes = await Post.findById(postId)
+    const totalPages = Math.ceil(countLikes.likes.length / limit)
     res.json({
       page,
       limit,
-      totalPages: Math.ceil(post.likes.length / limit),
+      totalPages,
       likes
     });
   } catch (error) {
@@ -250,10 +254,12 @@ exports.getPostComments = async (req, res) => {
     });
     if (!post) return res.status(400).json({ msg: "post not found" });
     const comments = post.comments;
+    const countComments = await Post.findById(postId)
+    const totalPages = Math.ceil(countComments.comments.length / limit)
     res.json({
       page,
       limit,
-      totalPages: Math.ceil(post.comments.length / limit),
+      totalPages,
       comments
     });
   } catch (error) {
@@ -282,10 +288,12 @@ exports.getCommentReplies = async (req, res) => {
     });
     if (!comment) return res.status(400).json({ msg: "comment not found" });
     const replies = comment.replies;
+    const countReplies = await Comment.findById(commentId)
+    const totalPages = Math.ceil(countReplies.replies.length / limit)
     res.json({
       page,
       limit,
-      totalPages: Math.ceil(comment.replies.length / limit),
+      totalPages,
       replies
     });
   } catch (error) {
@@ -308,10 +316,12 @@ exports.getCommentLikes = async (req, res) => {
     });
     if (!comment) return res.status(400).json({ msg: "comment not found" });
     const likes = comment.likes;
+    const countLikes = await Comment.findById(commentId)
+    const totalPages = Math.ceil(countLikes.likes.length / limit)
     res.json({
       page,
       limit,
-      totalPages: Math.ceil(comment.likes.length / limit),
+      totalPages,
       likes
     });
   } catch (error) {
