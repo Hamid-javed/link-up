@@ -294,8 +294,8 @@ exports.searchUser = async (req, res) => {
       id: user._id,
       name: user.name,
       profilePicture: user.profilePicture,
-      follwers: user.followers,
-      follwing: user.following
+      follwers: user.followers,// no of users
+      follwing: user.following// no of followers
     }))
     const totalUsers = await User.countDocuments();
     const totalPages = Math.ceil(totalUsers / limit);

@@ -32,6 +32,7 @@ exports.updatePost = async (req, res) => {
         const { newCaption } = req.body;
         const { postId } = req.params;
         const userPost = await Post.findOne({ _id: postId });
+        // make it opposite, (userPost.user !== userId) return error
         if (userPost.user === userId) {
             userPost.caption = newCaption || userPost.caption
             userPost.save();
@@ -41,15 +42,16 @@ exports.updatePost = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-//todo remove post from user
 exports.deletePost = async (req, res) => {
     try {
         const { postId } = req.params;
         const userId = req.id;
         const userPost = await Post.findOne({ _id: postId })
+        // make it opposite, (userPost.user !== userId) return error
         if (userPost.user === userId) {
             user.posts = user.posts.filter(post => post.toString() !== postId);
             const user = await User.findOne({ _id: userId });
+            //remove post from user too
             user.save()
             await Post.deleteOne({ _id: postId });
             res.status(201).json({ message: "Post deleted!" });
