@@ -10,11 +10,11 @@ const cloudinary = require('../config/cloudinaryConfig');
 
 // Controller for user registeration
 exports.register = async (req, res) => {
-  const { name, email, password} = req.body;
+  const { name, email, password } = req.body;
   try {
-    if(!name || !email || !password) return res.status(400).json({msg: "please provide all the details"})
+    if (!name || !email || !password) return res.status(400).json({ msg: "please provide all the details" })
     const hasdedPass = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hasdedPass,});
+    await User.create({ name, email, password: hasdedPass, });
     res.status(201).json({ msg: " user cretaed successfully!" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -25,14 +25,14 @@ exports.addProfilePic = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const userId = req.id
-    const user = await User.findOne({_id: userId})
+    const user = await User.findOne({ _id: userId })
     const url = req.file.path;
     if (user.profilePicture) {
       const publicId = user.profilePicture.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(publicId);
-    } 
+    }
     user.profilePicture = url
-    await user.save() 
+    await user.save()
     res.status(201).json({ msg: "profile picture added" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -238,13 +238,13 @@ exports.changePassword = async (req, res) => {
 exports.delProfilePic = async (req, res) => {
   try {
     const userId = req.id
-    const user = await User.findOne({_id: userId})
+    const user = await User.findOne({ _id: userId })
     if (user.profilePicture) {
       const publicId = user.profilePicture.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(publicId);
-    } 
+    }
     user.profilePicture = ""
-    await user.save() 
+    await user.save()
     res.status(201).json({ msg: "profile picture deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -397,100 +397,101 @@ exports.getFeed = async (req, res) => {
 
 
 exports.addStory = async (req, res) => {
-  try {
-    const userId = req.id;
-    const {caption} = req.body
-    const file = req.file;
-    if(!caption && !file) return res.status(400).json({ msg: "please add either image or caption" });
-    const newStory = new Story({
-      user: userId,
-      content: file ? file.path : "",
-      caption: caption ? caption : ""
-    });
-    await newStory.save();
-    res.status(201).json({ msg: "Story uploaded" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    
-  }
+    try {
+        const userId = req.id;
+        const { caption } = req.body
+        const file = req.file;
+        if (!caption && !file) return res.status(400).json({ msg: "please add either image or caption" });
+        const newStory = new Story({
+            user: userId,
+            content: file ? file.path : "",
+            caption: caption ? caption : ""
+        });
+        await newStory.save();
+        res.status(201).json({ msg: "Story uploaded" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+
+    }
 }
 
 exports.delStory = async (req, res) => {
-  try {
-    const userId = req.id;
-    const {storyId} = req.params;
-    const story = await Story.findById(storyId)
-    if(!story) return res.status(400).json({msg: "story not found"})
-    if(!story.user.equals(userId)) return res.status(403).json({msg: "you cannot delete this story"})
-    await Story.findByIdAndDelete(storyId)
-    res.status(201).json({ msg: "Story deleted" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    
-  }
+    try {
+        const userId = req.id;
+        const { storyId } = req.params;
+        const story = await Story.findById(storyId)
+        if (!story) return res.status(400).json({ msg: "story not found" })
+        if (!story.user.equals(userId)) return res.status(403).json({ msg: "you cannot delete this story" })
+        await Story.findByIdAndDelete(storyId)
+        res.status(201).json({ msg: "Story deleted" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+
+    }
 }
 
 exports.getStoriesFeed = async (req, res) => {
-  try {
-    const userId = req.id;
-    const page = parseInt(req.query.page) || 1; 
-    const limit = parseInt(req.query.limit) || 10; 
-    const skip = (page - 1) * limit; 
+    try {
+        const userId = req.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-    const user = await User.findById(userId);
-    const userIds = user.following.map(following => following._id);
-    userIds.unshift(userId)
+        const user = await User.findById(userId);
+        const userIds = user.following.map(following => following._id);
+        userIds.unshift(userId)
 
-  
 
-      const stories = await Story.find({ user: { $in: userIds } })
-      .populate('user', 'name profilePicture')
-      .sort('createdAt');
 
-    
-    const storiesGroupedByUser = stories.reduce((acc, story) => {
-      if (!acc[story.user._id]) {
-        acc[story.user._id] = { user: story.user, stories: [] };
-      }
-      acc[story.user._id].stories.push(story);
-      return acc;
-    }, {});
+        const stories = await Story.find({ user: { $in: userIds } })
+            .populate('user', 'name profilePicture')
+            .sort('createdAt');
 
-    const storiesToSend = Object.values(storiesGroupedByUser);
-    const totalPages = storiesToSend.length / limit
-    const paginatedBundles = storiesToSend.slice(skip, skip + limit)
 
-    
-    res.json({
-      page,
-      limit,
-      totalPages,
-      paginatedBundles});
- 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    
-  }
+        const storiesGroupedByUser = stories.reduce((acc, story) => {
+            if (!acc[story.user._id]) {
+                acc[story.user._id] = { user: story.user, stories: [] };
+            }
+            acc[story.user._id].stories.push(story);
+            return acc;
+        }, {});
+
+        const storiesToSend = Object.values(storiesGroupedByUser);
+        const totalPages = storiesToSend.length / limit
+        const paginatedBundles = storiesToSend.slice(skip, skip + limit)
+
+
+        res.json({
+            page,
+            limit,
+            totalPages,
+            paginatedBundles
+        });
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+
+    }
 }
 
 exports.getUserOwnStories = async (req, res) => {
-  try {
-    const userId = req.id;
-    const stories = await Story.find({user: userId}).populate('user', 'name profilePicture').sort('createdAt');
-    res.json(stories)
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    
-  }
+    try {
+        const userId = req.id;
+        const stories = await Story.find({ user: userId }).populate('user', 'name profilePicture').sort('createdAt');
+        res.json(stories)
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+
+    }
 }
 
 exports.getUserStoriesById = async (req, res) => {
-  try {
-    const {userId} = req.params;
-    const stories = await Story.find({user: userId}).populate('user', 'name profilePicture').sort('createdAt');
-    res.json(stories)
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-    
-  }
+    try {
+        const { userId } = req.params;
+        const stories = await Story.find({ user: userId }).populate('user', 'name profilePicture').sort('createdAt');
+        res.json(stories)
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+
+    }
 }

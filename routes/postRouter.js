@@ -26,7 +26,7 @@ router.get("/comments/:commentId/likes", verifyUserToken, postControl.getComment
 router.get("/feed", verifyUserToken, postControl.getFeed)
 
 router.post("/stories/add", verifyUserToken, post, postControl.addStory)
-router.delete("/stories/:storyId/del",verifyUserToken, postControl.delStory)
+router.delete("/stories/:storyId/del", verifyUserToken, postControl.delStory)
 router.get("/stories/feed", verifyUserToken, postControl.getStoriesFeed)
 router.get("/stories/get", verifyUserToken, postControl.getUserOwnStories)
 router.get("/:userId/stories/get", verifyUserToken, postControl.getUserStoriesById)

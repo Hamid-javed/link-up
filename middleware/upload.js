@@ -6,30 +6,31 @@ const cloudinary = require('../config/cloudinaryConfig');
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-      folder: 'social_media_uploads',
-      format: async (req, file) => {
-          const ext = file.mimetype.split('/')[1];
-          return ['jpeg', 'png', "webp", 'bmp', 'tiff'].includes(ext) ? ext : 'jpeg';
-      },
-      public_id: (req, file) => `${req.id}`
+    folder: 'social_media_uploads',
+    format: async (req, file) => {
+      const ext = file.mimetype.split('/')[1];
+      return ['jpeg', 'png', "webp", 'bmp', 'tiff'].includes(ext) ? ext : 'jpeg';
+    },
+    public_id: (req, file) => `${req.id}`
   },
 });
 
 const fileFilter = (req, file, cb) => {
-try {
-  const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff/;
-  const mimetype = allowedTypes.test(file.mimetype);
-  const extname = allowedTypes.test(file.originalname.toLowerCase().split('.').pop());
+  try {
+    const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff/;
+    const mimetype = allowedTypes.test(file.mimetype);
+    const extname = allowedTypes.test(file.originalname.toLowerCase().split('.').pop());
 
-  if (mimetype && extname) {
+    if (mimetype && extname) {
       return cb(null, true);
-  } else {
+    } else {
       cb(new Error('Only image files are allowed!'));
+    }
+  } catch (error) {
+    console.log(error.message)
+
   }
-} catch (error) {
-  console.log(error.message)
-  
-}};
+};
 
 exports.upload = multer({
   storage,
