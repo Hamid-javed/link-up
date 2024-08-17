@@ -1,7 +1,6 @@
 const Post = require("../models/postSchema");
 const User = require("../models/userSchema");
 const Comment = require("../models/commentSchema");
-const { post } = require("moongose/routes");
 
 exports.addPost = async (req, res) => {
     try {
@@ -9,7 +8,7 @@ exports.addPost = async (req, res) => {
         const { caption } = req.body;
         if (!caption && !req.file)
             return res.status(400).json({
-                msg: "please add either image or caption"
+                msg: "please add either image or caption",
             });
         const user = await User.findOne({ _id: userId });
         const file = req.file;
@@ -33,11 +32,12 @@ exports.updatePost = async (req, res) => {
         const { newCaption } = req.body;
         const { postId } = req.params;
         const userPost = await Post.findOne({ _id: postId });
-        if (userPost.user === userId) {
-            userPost.caption = newCaption || userPost.caption
-            userPost.save();
-            res.status(201).json({ message: "Post Updated!" });
+        if (!userPost.user === userId) {
+            return res.status(405).json({ message: "Not your post!" });
         }
+        userPost.caption = newCaption || userPost.caption;
+        userPost.save();
+        res.status(201).json({ message: "Post Updated!" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -47,19 +47,22 @@ exports.deletePost = async (req, res) => {
     try {
         const { postId } = req.params;
         const userId = req.id;
-        const userPost = await Post.findOne({ _id: postId })
-        if (userPost.user === userId) {
-            user.posts = user.posts.filter(post => post.toString() !== postId);
-            const user = await User.findOne({ _id: userId });
-            user.save()
-            await Post.deleteOne({ _id: postId });
-            res.status(201).json({ message: "Post deleted!" });
+        const userPost = await Post.findOne({ _id: postId });
+        if (!userPost) {
+            return res.status(404).json({message: "post not found!"})
         }
+        if (!userPost.user === userId) {
+            return res.status(405).json({ messgae: "Not your post!" });
+        }
+        await Post.deleteOne({ _id: postId });
+        const user = await User.findById(userId);
+        user.posts = user.posts.filter((post) => post._id.toString() !== postId);
+        user.save();
+        res.status(201).json({ message: "Post deleted!" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 exports.addLike = async (req, res) => {
     try {
@@ -87,10 +90,10 @@ exports.delLike = async (req, res) => {
         const post = await Post.findOne({ _id: postId });
         if (!post) return res.status(400).json({ msg: "post not found" });
         const user = await User.findById(userId);
-        post.likes.pull(userId)
-        user.likedPosts.pull(postId)
-        await post.save()
-        await user.save()
+        post.likes.pull(userId);
+        user.likedPosts.pull(postId);
+        await post.save();
+        await user.save();
         res.status(200).json({ msg: "like deleted" });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -101,12 +104,12 @@ exports.likeComment = async (req, res) => {
     try {
         const userId = req.id;
         const { commentId } = req.params;
-        const comment = await Comment.findById(commentId)
+        const comment = await Comment.findById(commentId);
         if (!comment) return res.status(400).json({ msg: "comment not found" });
         if (comment.likes.includes(userId))
             return res.status(400).json({ msg: "comment already liked" });
-        comment.likes.push(userId)
-        await comment.save()
+        comment.likes.push(userId);
+        await comment.save();
         res.status(200).json({ msg: "comment liked" });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -117,17 +120,15 @@ exports.unLikeComment = async (req, res) => {
     try {
         const userId = req.id;
         const { commentId } = req.params;
-        const comment = await Comment.findById(commentId)
+        const comment = await Comment.findById(commentId);
         if (!comment) return res.status(400).json({ msg: "comment not found" });
-        comment.likes.pull(userId)
-        await comment.save()
+        comment.likes.pull(userId);
+        await comment.save();
         res.status(200).json({ msg: "comment unliked" });
     } catch (error) {
         res.status(500).json({ message: error.message });
-
     }
-}
-
+};
 
 exports.addComment = async (req, res) => {
     try {
@@ -155,9 +156,9 @@ exports.delComment = async (req, res) => {
         const { postId, commentId } = req.params;
         const post = await Post.findById(postId);
         if (!post) return res.status(400).json({ msg: "post not found" });
-        const comment = await Comment.findById(commentId)
+        const comment = await Comment.findById(commentId);
         if (!comment) return res.status(400).json({ msg: "comment not found" });
-        await Comment.deleteOne({ _id: commentId })
+        await Comment.deleteOne({ _id: commentId });
         post.comments.pull(commentId);
         await post.save();
         res.status(200).json({ msg: "comment deleted" });
