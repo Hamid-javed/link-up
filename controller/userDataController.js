@@ -64,7 +64,7 @@ exports.getPosts = async (req, res) => {
         },
       ],
     });
-    console.log(user)
+    console.log(user);
 
     const posts = user.posts.map((post) => {
       return {
@@ -77,9 +77,9 @@ exports.getPosts = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
-    const countPosts = await User.findById(userId)
-    const totalPages = Math.ceil(countPosts.posts.length / limit)
-   
+    const countPosts = await User.findById(userId);
+    const totalPages = Math.ceil(countPosts.posts.length / limit);
+
     res.json({
       page,
       limit,
@@ -126,8 +126,8 @@ exports.getPostsByUserId = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
-    const countPosts = await User.findById(userId)
-    const totalPages = Math.ceil(countPosts.posts.length / limit)
+    const countPosts = await User.findById(userId);
+    const totalPages = Math.ceil(countPosts.posts.length / limit);
 
     res.json({
       page,
@@ -196,8 +196,8 @@ exports.getFollowers = async (req, res) => {
         profilePicture: follower.profilePicture,
       };
     });
-    const countFollowers = await User.findById(userId)
-    const totalPages = Math.ceil(countFollowers.followers.length / limit)
+    const countFollowers = await User.findById(userId);
+    const totalPages = Math.ceil(countFollowers.followers.length / limit);
     const results = {
       page,
       limit,
@@ -232,8 +232,8 @@ exports.getFollowing = async (req, res) => {
         profilePicture: follower.profilePicture,
       };
     });
-    const countFollowing = await User.findById(userId)
-    const totalPages = Math.ceil(countFollowing.following.length / limit)
+    const countFollowing = await User.findById(userId);
+    const totalPages = Math.ceil(countFollowing.following.length / limit);
     const results = {
       page,
       limit,
@@ -249,7 +249,7 @@ exports.getFollowing = async (req, res) => {
 
 exports.getLiked = async (req, res) => {
   try {
-    const userId = req.id
+    const userId = req.id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 25;
     const user = await User.findById(userId).populate({
@@ -278,8 +278,8 @@ exports.getLiked = async (req, res) => {
         createdAt: post.createdAt,
       };
     });
-    const countLikes = await User.findById(userId)
-    const totalPages = Math.ceil(countLikes.likedPosts.length / limit)
+    const countLikes = await User.findById(userId);
+    const totalPages = Math.ceil(countLikes.likedPosts.length / limit);
 
     res.json({
       page,
@@ -289,36 +289,39 @@ exports.getLiked = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
-  }}
-
+  }
+};
 
 exports.searchUser = async (req, res) => {
   try {
-    const {query} = req.query || "";
+    const { query } = req.query || "";
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    // make sure query is provided otherwse do not send anything back
+    if (!query) {
+      return res.status(200).json({ message: "No query provided" });
+    }
 
-    const searchPattern = new RegExp(query, 'i');
-    const users = await User.find({ name: { $regex: searchPattern }}).skip(skip).limit(limit);
-    const usersData = users.map(user => ({
-      id: user._id,
+    const searchPattern = new RegExp(query, "i");
+    const users = await User.find({ name: { $regex: searchPattern } })
+      .skip(skip)
+      .limit(limit);
+    const usersData = users.map((user) => ({
+      user_id: user._id,
       name: user.name,
-      profilePicture: user.profilePicture,
-      follwers: user.followers,// no of followers
-      follwing: user.following// no of following
-    }))
-
-    // total pages is wrong, dont get totalUsers, get totalResults.
-    // then total pages will be totalResults / limit
-    const totalUsers = await User.countDocuments();
-    const totalPages = Math.ceil(totalUsers / limit);
+      profile: user.profilePicture,
+      follwers: user.followers.length,
+      follwing: user.following.length,
+    }));
+    const totalResults = await User.find({
+      name: { $regex: searchPattern },
+    }).countDocuments();
+    const totalPages = Math.ceil(totalResults / limit);
     res.status(200).json({
       page,
       totalPages,
       totalUsers,
-      usersData
+      usersData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

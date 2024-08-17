@@ -7,7 +7,7 @@ const { upload } = require("../middleware/upload");
 // To register a user
 router.post("/register", authControll.register);
 // TO add a profile photo
-router.post("/add-profile-pic",verifyUserToken, upload, authControll.addProfilePic);
+router.post("/add-profile-pic", verifyUserToken, upload, authControll.addProfilePic);
 // To login in a user
 router.post("/login", authControll.login);
 // To change user details 
@@ -23,7 +23,7 @@ router.post("/change-password", verifyUserToken, authControll.changePassword);
 // To to delete a user accout
 router.delete("/delete", verifyUserToken, authControll.deleteUser);
 // To delete profile picture
-router.delete("/del-profile-pic",verifyUserToken, authControll.delProfilePic);
+router.delete("/del-profile-pic", verifyUserToken, authControll.delProfilePic);
 
 
 
