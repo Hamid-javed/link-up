@@ -238,30 +238,36 @@ exports.getFollowing = async (req, res) => {
   }
 };
 
-
 exports.searchUser = async (req, res) => {
   try {
-    const {query} = req.query || "";
+    const { query } = req.query || "";
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    if (!query) {
+      return res.status(200).json({ message: "No query provided" });
+    }
 
-    const searchPattern = new RegExp(query, 'i');
-    const users = await User.find({ name: { $regex: searchPattern }}).skip(skip).limit(limit);
-    const usersData = users.map(user => ({
+    const searchPattern = new RegExp(query, "i");
+    const users = await User.find({ name: { $regex: searchPattern } })
+      .skip(skip)
+      .limit(limit);
+    const usersData = users.map((user) => ({
       user_id: user._id,
       name: user.name,
       profile: user.profilePicture,
-      follwers: user.followers,
-      follwing: user.following
-    }))
-    const totalUsers = await User.countDocuments();
-    const totalPages = Math.ceil(totalUsers / limit);
+      follwers: user.followers.length,
+      follwing: user.following.length,
+    }));
+    const totalResults = await User.find({
+      name: { $regex: searchPattern },
+    }).countDocuments();
+    const totalPages = Math.ceil(totalResults / limit);
     res.status(200).json({
       page,
       totalPages,
       totalUsers,
-      usersData
+      usersData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
