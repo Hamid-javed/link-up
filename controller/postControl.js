@@ -380,7 +380,7 @@ exports.getFeed = async (req, res) => {
       page,
       limit,
       totalPages,
-      postsToSend
+      feed: postsToSend
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
