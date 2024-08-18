@@ -1,5 +1,10 @@
 const Notification = require("../models/notificationSchema");
 const User = require("../models/userSchema");
+const io = require('socket.io')
+// const post = require('../controller/postControl')
+const Post = require("../models/postSchema");
+const Comment = require("../models/commentSchema");
+
 
 // Add a notification
 exports.addNotification = async (req, res) => {
