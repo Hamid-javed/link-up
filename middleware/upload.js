@@ -36,9 +36,13 @@ exports.upload = multer({
   storage,
   limits: { fileSize: 1000000 }, // 1MB limit
   fileFilter: fileFilter
+<<<<<<< HEAD
 }).single('image'); // Field name should match the form field name
 
 
 
 
 
+=======
+}).single('image'); // Field name should match the form field name
+>>>>>>> hamid-dev
