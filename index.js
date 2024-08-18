@@ -4,7 +4,7 @@ const { Server } = require("socket.io");
 const app = express();
 const mongoose = require("mongoose");
 require("dotenv").config();
-const User = require("./models/userSchema")
+const User = require("./models/userSchema");
 const userRouter = require("./routes/userRouter");
 const postRouter = require("./routes/postRouter");
 const userDataRouter = require("./routes/userDataRouter");
@@ -26,19 +26,23 @@ app.use("/user-data", userDataRouter);
 app.use("/auth", userRouter);
 app.use("/groups", groupRouter);
 
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+});
 
-// To store user and their sockets Id
+
+
 let users = {};
 
+// Making connection with socket 
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  // userId recive from frontend
   socket.on("join", async (userId) => {
     try {
-      const user = await User.findById(userId); // Fetch user from database by ID
+      const user = await User.findById(userId);
       if (user) {
-        users[userId] = socket.id; // Map user ID to socket ID
+        users[userId.toString()] = socket.id;
         console.log(`${user.name} joined with socket ID: ${socket.id}`);
       } else {
         console.log("User not found");
@@ -48,27 +52,35 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Listen for private messages
-  socket.on("private message", ({ from, to, message }) => {
-    const recipientSocketId = users[to];
-    if (recipientSocketId) {
-      // Send the message only to the recipient
-      io.to(recipientSocketId).emit("private message", { from, message });
-      console.log(`Message from ${from} to ${to}: ${message}`);
-    } else {
-      console.log(`User ${to} not found`);
+  socket.on("private message", async ({ from, to, message }) => {
+    try {
+      const sender = await User.findById(from);
+      const receiver = await User.findById(to);
+      if (sender) {
+        const recipientSocketId = users[to.toString()];
+        if (recipientSocketId) {
+          io.to(recipientSocketId).emit("private message", {
+            from: sender.name,
+            message,
+          });
+          console.log(`Message from ${sender.name} to ${to}: ${receiver.name}`);
+        } else {
+          console.log(`User ${to} is not connected`);
+        }
+      } else {
+        console.log("Sender not found");
+      }
+    } catch (err) {
+      console.log("Error fetching sender user:", err);
     }
   });
 
+  // Handle user disconnect
   socket.on("disconnect", () => {
-    console.log("A user disconnected");
-    // Remove the user from the active users list
-    for (let userId in users) {
-      if (users[userId] === socket.id) {
-        delete users[userId];
-        console.log(`${userId} has disconnected`);
-        break;
-      }
+    const userId = Object.keys(users).find(key => users[key] === socket.id);
+    if (userId) {
+      delete users[userId]; 
+      console.log(`User with ID ${userId} disconnected`);
     }
   });
 });
