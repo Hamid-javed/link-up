@@ -22,6 +22,7 @@ app.use(cookieParser());
 app.use(cors());
 app.use(express.json());
 
+// Initialize routers after io is created
 app.use("/posts", postRouter);
 app.use("/user-data", userDataRouter);
 app.use("/auth", userRouter);

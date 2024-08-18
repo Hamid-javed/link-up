@@ -31,6 +31,7 @@ exports.addPost = async (req, res) => {
             content: file ? file.path : "",
             group: groupGiven ? groupGiven : null,
         });
+
         const newPost = await post.save();
         if (groupGiven) {
             group.posts.push(newPost._id);
