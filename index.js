@@ -1,60 +1,80 @@
-const express = require("express")
+const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const app = express()
+const app = express();
 const mongoose = require("mongoose");
-require("dotenv").config()
-const userRouter = require("./routes/userRouter")
-const postRouter = require("./routes/postRouter")
-const userDataRouter = require("./routes/userDataRouter")
-const groupRouter = require("./routes/groupRouter")
-const cookieParser = require('cookie-parser');
-const cors = require('cors');
+require("dotenv").config();
+const User = require("./models/userSchema")
+const userRouter = require("./routes/userRouter");
+const postRouter = require("./routes/postRouter");
+const userDataRouter = require("./routes/userDataRouter");
+const groupRouter = require("./routes/groupRouter");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 const server = http.createServer(app);
 const io = new Server(server);
 
-const port = process.env.port
+const port = process.env.port;
 
 app.use(cookieParser());
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
-app.use("/posts", postRouter)
-app.use("/user-data", userDataRouter)
-app.use("/auth", userRouter)
-app.use("/groups", groupRouter)
-
-
+app.use("/posts", postRouter);
+app.use("/user-data", userDataRouter);
+app.use("/auth", userRouter);
+app.use("/groups", groupRouter);
 
 
-io.on('connection', (socket) => {
-  socket.on('message', (message) => {
-    // Get the chat session ID from the message
-    const chatSessionId = message.chatSessionId;
+// To store user and their sockets Id
+let users = {};
 
-    // Get the chat session from the database
-    ChatSession.findById(chatSessionId, (err, chatSession) => {
-      if (err) {
-        console.error(err);
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // userId recive from frontend
+  socket.on("join", async (userId) => {
+    try {
+      const user = await User.findById(userId); // Fetch user from database by ID
+      if (user) {
+        users[userId] = socket.id; // Map user ID to socket ID
+        console.log(`${user.name} joined with socket ID: ${socket.id}`);
       } else {
-        // Broadcast the message to the other user
-        io.emit('message', message);
+        console.log("User not found");
       }
-    });
+    } catch (err) {
+      console.log("Error fetching user:", err);
+    }
+  });
+
+  // Listen for private messages
+  socket.on("private message", ({ from, to, message }) => {
+    const recipientSocketId = users[to];
+    if (recipientSocketId) {
+      // Send the message only to the recipient
+      io.to(recipientSocketId).emit("private message", { from, message });
+      console.log(`Message from ${from} to ${to}: ${message}`);
+    } else {
+      console.log(`User ${to} not found`);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+    // Remove the user from the active users list
+    for (let userId in users) {
+      if (users[userId] === socket.id) {
+        delete users[userId];
+        console.log(`${userId} has disconnected`);
+        break;
+      }
+    }
   });
 });
 
-
-
-
-
-
-
-
-mongoose.connect(
-  process.env.DB_URL
-)
+mongoose
+  .connect(process.env.DB_URL)
   .then(() => {
     console.log("Connected To MongoDB"),
       server.listen(port, () => {
