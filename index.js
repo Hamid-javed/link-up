@@ -9,6 +9,7 @@ const userRouter = require("./routes/userRouter");
 const postRouter = require("./routes/postRouter");
 const userDataRouter = require("./routes/userDataRouter");
 const groupRouter = require("./routes/groupRouter");
+const notificationRouter = require("./routes/notificationRouter");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const { send } = require("process");
@@ -26,6 +27,7 @@ app.use("/posts", postRouter);
 app.use("/user-data", userDataRouter);
 app.use("/auth", userRouter);
 app.use("/groups", groupRouter);
+app.use('/notifications', notificationRouter);
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
