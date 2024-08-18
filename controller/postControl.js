@@ -1,28 +1,45 @@
 const Post = require("../models/postSchema");
 const User = require("../models/userSchema");
 const Comment = require("../models/commentSchema");
-const Story = require("../models/storySchema")
+const Story = require("../models/storySchema");
+const Group = require("../models/groupSchema");
 
 exports.addPost = async (req, res) => {
     try {
         const userId = req.id;
         const { caption } = req.body;
+        const { groupId } = req.params;
+        let groupGiven = null;
+        let group;
+        if (groupId) {
+            group = await Group.findById(groupId);
+            if (!group) return res.status(400).json({ msg: "group not found" });
+            if (!group.members.includes(userId))
+                return res.status(403).json({ msg: "you are not a member" });
+            groupGiven = groupId;
+        }
+
         if (!caption && !req.file)
-            return res.status(400).json({
-                msg: "please add either image or caption",
-            });
+            return res
+                .status(400)
+                .json({ msg: "please add either image or caption" });
         const user = await User.findOne({ _id: userId });
         const file = req.file;
         const post = new Post({
             user: userId,
             caption: caption ? caption : "",
             content: file ? file.path : "",
+            group: groupGiven ? groupGiven : null,
         });
 
         const newPost = await post.save();
+        if (groupGiven) {
+            group.posts.push(newPost._id);
+            await group.save();
+        }
         user.posts.push(newPost._id);
         await user.save();
-        
+
         res.status(201).json({ message: "Post added!" });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -35,7 +52,10 @@ exports.updatePost = async (req, res) => {
         const { newCaption } = req.body;
         const { postId } = req.params;
         const userPost = await Post.findOne({ _id: postId });
-        if (!userPost.user === userId) {
+        if (!userPost) {
+            return res.status(404).json({message: "Post not found!"})
+        }
+        if (userPost.user.toString() !== userId) {
             return res.status(405).json({ message: "Not your post!" });
         }
         userPost.caption = newCaption || userPost.caption;
@@ -45,6 +65,8 @@ exports.updatePost = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
 exports.deletePost = async (req, res) => {
     try {
         const { postId } = req.params;
@@ -53,8 +75,8 @@ exports.deletePost = async (req, res) => {
         if (!userPost) {
             return res.status(404).json({ message: "post not found!" });
         }
-        if (!userPost.user === userId) {
-            return res.status(405).json({ messgae: "Not your post!" });
+        if (userPost.user.toString() !== userId.toString()) {
+            return res.status(403).json({ message: "Not your post!" });
         }
         await Post.deleteOne({ _id: postId });
         const user = await User.findById(userId);
@@ -64,7 +86,8 @@ exports.deletePost = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-};
+}
+
 
 exports.addLike = async (req, res) => {
     try {
@@ -365,8 +388,13 @@ exports.getFeed = async (req, res) => {
 
         let posts = followedPosts;
 
+        console.log(user.groups);
+
         if (followedPosts.length < limit) {
-            const additionalPosts = await Post.find({ user: { $nin: followingIds } })
+            const additionalPosts = await Post.find({
+                user: { $nin: followingIds },
+                $or: [{ group: { $in: user.groups } }, { group: null }],
+            })
                 .populate({ path: "user", select: "name profilePicture" })
                 .sort({ createdAt: -1 })
                 .skip(Math.max(0, skip - followedPosts.length))
@@ -382,6 +410,7 @@ exports.getFeed = async (req, res) => {
                 content: post.content,
                 noOfLikes: post.noOfLikes,
                 noOfComments: post.noOfComments,
+                group: post.group,
                 createdAt: post.createdAt,
             };
         });
@@ -390,47 +419,48 @@ exports.getFeed = async (req, res) => {
             page,
             limit,
             totalPages,
-            postsToSend,
+            feed: postsToSend,
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-
 exports.addStory = async (req, res) => {
     try {
         const userId = req.id;
-        const { caption } = req.body
+        const { caption } = req.body;
         const file = req.file;
-        if (!caption && !file) return res.status(400).json({ msg: "please add either image or caption" });
+        if (!caption && !file)
+            return res
+                .status(400)
+                .json({ msg: "please add either image or caption" });
         const newStory = new Story({
             user: userId,
             content: file ? file.path : "",
-            caption: caption ? caption : ""
+            caption: caption ? caption : "",
         });
         await newStory.save();
         res.status(201).json({ msg: "Story uploaded" });
     } catch (error) {
         res.status(500).json({ message: error.message });
-
     }
-}
+};
 
 exports.delStory = async (req, res) => {
     try {
         const userId = req.id;
         const { storyId } = req.params;
-        const story = await Story.findById(storyId)
-        if (!story) return res.status(400).json({ msg: "story not found" })
-        if (!story.user.equals(userId)) return res.status(403).json({ msg: "you cannot delete this story" })
-        await Story.findByIdAndDelete(storyId)
+        const story = await Story.findById(storyId);
+        if (!story) return res.status(400).json({ msg: "story not found" });
+        if (!story.user.equals(userId))
+            return res.status(403).json({ msg: "you cannot delete this story" });
+        await Story.findByIdAndDelete(storyId);
         res.status(201).json({ msg: "Story deleted" });
     } catch (error) {
         res.status(500).json({ message: error.message });
-
     }
-}
+};
 
 exports.getStoriesFeed = async (req, res) => {
     try {
@@ -440,15 +470,12 @@ exports.getStoriesFeed = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const user = await User.findById(userId);
-        const userIds = user.following.map(following => following._id);
-        userIds.unshift(userId)
-
-
+        const userIds = user.following.map((following) => following._id);
+        userIds.unshift(userId);
 
         const stories = await Story.find({ user: { $in: userIds } })
-            .populate('user', 'name profilePicture')
-            .sort('createdAt');
-
+            .populate("user", "name profilePicture")
+            .sort("createdAt");
 
         const storiesGroupedByUser = stories.reduce((acc, story) => {
             if (!acc[story.user._id]) {
@@ -459,41 +486,40 @@ exports.getStoriesFeed = async (req, res) => {
         }, {});
 
         const storiesToSend = Object.values(storiesGroupedByUser);
-        const totalPages = storiesToSend.length / limit
-        const paginatedBundles = storiesToSend.slice(skip, skip + limit)
-
+        const totalPages = storiesToSend.length / limit;
+        const paginatedBundles = storiesToSend.slice(skip, skip + limit);
 
         res.json({
             page,
             limit,
             totalPages,
-            paginatedBundles
+            paginatedBundles,
         });
-
     } catch (error) {
         res.status(500).json({ message: error.message });
-
     }
-}
+};
 
 exports.getUserOwnStories = async (req, res) => {
     try {
         const userId = req.id;
-        const stories = await Story.find({ user: userId }).populate('user', 'name profilePicture').sort('createdAt');
-        res.json(stories)
+        const stories = await Story.find({ user: userId })
+            .populate("user", "name profilePicture")
+            .sort("createdAt");
+        res.json(stories);
     } catch (error) {
         res.status(500).json({ message: error.message });
-
     }
-}
+};
 
 exports.getUserStoriesById = async (req, res) => {
     try {
         const { userId } = req.params;
-        const stories = await Story.find({ user: userId }).populate('user', 'name profilePicture').sort('createdAt');
-        res.json(stories)
+        const stories = await Story.find({ user: userId })
+            .populate("user", "name profilePicture")
+            .sort("createdAt");
+        res.json(stories);
     } catch (error) {
         res.status(500).json({ message: error.message });
-
     }
-}
+};

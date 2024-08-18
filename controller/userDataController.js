@@ -307,11 +307,11 @@ exports.searchUser = async (req, res) => {
       .skip(skip)
       .limit(limit);
     const usersData = users.map((user) => ({
-      user_id: user._id,
+      id: user._id,
       name: user.name,
       profile: user.profilePicture,
-      follwers: user.followers.length,
-      follwing: user.following.length,
+      followers: user.followers.length,
+      following: user.following.length,
     }));
     const totalResults = await User.find({
       name: { $regex: searchPattern },

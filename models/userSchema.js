@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   profilePicture: { type: String, default: '' },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
   posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
   noOfFollowers: { type: Number, default: 0 },
   noOfFollowing: { type: Number, default: 0 },
