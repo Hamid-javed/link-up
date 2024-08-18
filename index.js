@@ -27,6 +27,12 @@ app.use("/auth", userRouter);
 app.use("/groups", groupRouter);
 
 
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+});
+
+
+
 // To store user and their sockets Id
 let users = {};
 
@@ -38,7 +44,7 @@ io.on("connection", (socket) => {
     try {
       const user = await User.findById(userId); // Fetch user from database by ID
       if (user) {
-        users[userId] = socket.id; // Map user ID to socket ID
+        users[userId.toString()] = socket.id; // Map user ID to socket ID
         console.log(`${user.name} joined with socket ID: ${socket.id}`);
       } else {
         console.log("User not found");
@@ -48,16 +54,22 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Listen for private messages
+
   socket.on("private message", ({ from, to, message }) => {
-    const recipientSocketId = users[to];
-    if (recipientSocketId) {
-      // Send the message only to the recipient
-      io.to(recipientSocketId).emit("private message", { from, message });
-      console.log(`Message from ${from} to ${to}: ${message}`);
-    } else {
-      console.log(`User ${to} not found`);
-    }
+    // Fetch the recipient user from the database
+    User.findById(to)
+      .then((recipient) => {
+        console.log(recipient)
+        if (recipient) {
+            io.to(recipient._id).emit("private message", { from, message });
+            console.log(`Message from ${from} to ${to}: ${message}`);
+        } else {
+          console.log(`User ${to} not found`);
+        }
+      })
+      .catch((err) => {
+        console.log("Error fetching recipient user:", err);
+      });
   });
 
   socket.on("disconnect", () => {
