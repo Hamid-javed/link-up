@@ -31,7 +31,6 @@ exports.addPost = async (req, res) => {
             content: file ? file.path : "",
             group: groupGiven ? groupGiven : null,
         });
-
         const newPost = await post.save();
         if (groupGiven) {
             group.posts.push(newPost._id);
@@ -53,7 +52,7 @@ exports.updatePost = async (req, res) => {
         const { postId } = req.params;
         const userPost = await Post.findOne({ _id: postId });
         if (!userPost) {
-            return res.status(404).json({message: "Post not found!"})
+            return res.status(404).json({ message: "Post not found!" })
         }
         if (userPost.user.toString() !== userId) {
             return res.status(405).json({ message: "Not your post!" });
