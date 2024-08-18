@@ -6,7 +6,6 @@ const Post = require("../models/postSchema");
 const Comment = require("../models/commentSchema");
 
 
-
 // Add a notification
 exports.addNotification = async (req, res, io) => {
   try {
@@ -39,7 +38,6 @@ exports.addNotification = async (req, res, io) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 
 // Mark a notification as read
