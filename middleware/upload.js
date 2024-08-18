@@ -1,42 +1,36 @@
 const multer = require('multer');
 const path = require('path');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinaryConfig');
+const { v4: uuidv4 } = require('uuid');
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'social_media_uploads',
-    format: async (req, file) => {
-      const ext = file.mimetype.split('/')[1];
-      return ['jpeg', 'png', "webp", 'bmp', 'tiff'].includes(ext) ? ext : 'jpeg';
-    },
-    public_id: (req, file) => `${req.id}`
-  },
+// Set storage engine
+const storage = multer.diskStorage({
+  destination: './uploads/profilePhotos',
+  filename: (req, file, cb) => {
+    cb(null, `${req.id}${path.extname(file.originalname)}`);
+  }
 });
 
-const fileFilter = (req, file, cb) => {
-  try {
-    const allowedTypes = /jpeg|jpg|png|webp|bmp|tiff/;
-    const mimetype = allowedTypes.test(file.mimetype);
-    const extname = allowedTypes.test(file.originalname.toLowerCase().split('.').pop());
+// Check file type
+const checkFileType = (file, cb) => {
+  const filetypes = /jpeg|jpg|png/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
 
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'));
-    }
-  } catch (error) {
-    console.log(error.message)
-
+  if (extname && mimetype) {
+    return cb(null, true);
+  } else {
+    cb('Error: Images Only!');
   }
 };
 
+// Init upload
 exports.upload = multer({
   storage,
   limits: { fileSize: 1000000 }, // 1MB limit
-  fileFilter: fileFilter
-}).single('image'); // Field name should match the form field name
+  fileFilter: (req, file, cb) => {
+    checkFileType(file, cb);
+  }
+}).single('image');
 
 
 
