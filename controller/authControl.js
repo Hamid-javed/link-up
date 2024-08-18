@@ -13,6 +13,8 @@ exports.register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
     if (!name || !email || !password) return res.status(400).json({ msg: "please provide all the details" })
+  
+      
     const hasdedPass = await bcrypt.hash(password, 10);
     await User.create({ name, email, password: hasdedPass, });
     res.status(201).json({ msg: " user cretaed successfully!" });
