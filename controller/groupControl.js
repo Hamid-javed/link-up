@@ -309,7 +309,7 @@ exports.getPosts = async (req, res) => {
       ],
     });
     if (!group) return res.status(400).json({ msg: "group not found" });
-
+    if(!group.members.includes(req.id) && group.private) return res.status(403).json({ msg: "you are not a member" });
     const countLength = await Group.findById(groupId);
     const totalPages = Math.ceil(countLength.posts.length / limit);
 
@@ -343,6 +343,7 @@ exports.searchGroups = async (req, res) => {
       return {
         id: group._id,
         name: group.name,
+        description: group.description,
         members: group.noOfMembers
       }
     })
@@ -391,6 +392,26 @@ exports.leaveGroup = async (req, res) => {
     await user.save()
     await group.save();
     res.status(200).json({ msg: "group left" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getDetails = async (req, res) => {
+  try {
+    const userId = req.id;
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(400).json({ msg: "group not found" });
+    const user = await User.findById(userId)
+    if(!group.members.includes(req.id) && group.private) return res.status(403).json({ msg: "you are not a member" });
+    const details = {
+      id: group._id,
+      name: group.name,
+      description: group.description,
+      members: group.noOfMembers
+    }
+    res.status(200).json(details);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

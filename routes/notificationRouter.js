@@ -26,4 +26,7 @@ const {verifyUserToken} = require('../middleware/authUser')
     router.get('/unread-count', verifyUserToken, notificationController.getUnreadCount);
     router.get('/filter', verifyUserToken, notificationController.filterNotifications);
 
-    return router;
+    
+
+    module.exports = router;
+
