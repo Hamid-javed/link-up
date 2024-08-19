@@ -16,10 +16,12 @@ router.delete('/:groupId/admin/del-member/:userId', verifyUserToken, groupContro
 router.get("/:groupId/get-admins", verifyUserToken, groupControl.getAdmins)
 router.get("/:groupId/get-members", verifyUserToken, groupControl.getMembers)
 router.get("/:groupId/get-members/search", verifyUserToken, groupControl.searchMembers)
-router.get("/:groupId/posts/get", verifyUserToken, groupControl.getPosts)
+router.get("/:groupId/posts/feed", verifyUserToken, groupControl.getPosts)
 router.get("/search", verifyUserToken, groupControl.searchGroups)
 router.post("/:groupId/join", verifyUserToken, groupControl.joinGroup)
 router.post("/:groupId/leave", verifyUserToken, groupControl.leaveGroup)
+router.get("/:groupId/details", verifyUserToken, groupControl.getDetails)
+
 
 
 
