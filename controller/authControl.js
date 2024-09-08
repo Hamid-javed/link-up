@@ -10,14 +10,25 @@ const cloudinary = require('../config/cloudinaryConfig');
 
 // Controller for user registeration
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, number, password } = req.body;
   try {
-    if (!name || !email || !password) return res.status(400).json({ msg: "please provide all the details" })
-  
-      
-    const hasdedPass = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hasdedPass, });
-    res.status(201).json({ msg: " user cretaed successfully!" });
+    if (!name) {
+      return res.status(400).json({ message: "Name is required!" })
+    }
+    if (!email) {
+      return res.status(400).json({ message: "Email is required!" })
+    }
+    if (!password) {
+      return res.status(400).json({ message: "Password is required!" })
+    }
+
+    const user = await User.findOne({ email: email })
+    if (user) {
+      return res.status(400).json({ message: "Email is Taken!" })
+    }
+    const hasdedPAss = await bcrypt.hash(password, 10);
+    await User.create({ name, email, number, password: hasdedPAss });
+    res.status(200).json({ message: " user cretaed successfully!" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -46,18 +57,23 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).send("Invalid email");
+    if (!user) return res.status(401).json({
+      message: "Invalid email",
+      user
+    });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json("Password is wrong");
-
+    if (!isMatch) return res.status(400).json({ message: "Password is wrong" });
     let payload = { id: user._id };
     const token = jwt.sign(payload, SECRET_TOKEN);
     res.cookie("token", token, {
       httpOnly: true,
-      // maxAge: 60 * 60 * 1000
+      path: '/',
+      sameSite: 'None',
+      // maxAge: 60 * 60 * 1000,
+      secure: true
     });
-    res.status(200).send({
+    res.status(200).json({
       message: "User successfully logged in",
     });
   } catch (err) {
@@ -83,7 +99,7 @@ exports.changeDetails = async (req, res) => {
     }
     user.name = name || user.name;
     user.email = email || user.email;
-    const changedUser = await user.save();
+    await user.save();
     res.status(200).json({ message: "User details changed successfully!" })
   } catch (error) {
     res.status(500).json({
@@ -139,14 +155,14 @@ exports.resetPassword = async (req, res) => {
   if (!email || !otp || !newPassword) {
     return res
       .status(400)
-      .json({ error: "Email, OTP, and new password are required" });
+      .json({ message: "Email, OTP, and new password are required" });
   }
   try {
     const user = await User.findOne({ email: email });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     if (user.otp.otp !== otp || user.expireDate < Date.now()) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
+      return res.status(400).json({ message: "Invalid or expired OTP" });
     }
     const hasdNewPassword = await bcrypt.hash(newPassword, 10);
     user.password = hasdNewPassword;
@@ -202,19 +218,13 @@ exports.changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword, confirmPassword } = req.body;
     const userID = req.id;
-
-    // To find the user
     const fetchUser = await User.findOne({ _id: userID });
-
-    // Comparing passwords
     const isMatch = await bcrypt.compare(oldPassword, fetchUser.password);
     if (!isMatch) {
       return res.status(404).json({
         message: "Wrong Password!",
       });
     }
-
-    // Check new passwords match
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         message: "New passwords do not match!",
@@ -247,7 +257,7 @@ exports.delProfilePic = async (req, res) => {
     }
     user.profilePicture = ""
     await user.save()
-    res.status(201).json({ msg: "profile picture deleted" });
+    res.status(201).json({ message: "profile picture deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
